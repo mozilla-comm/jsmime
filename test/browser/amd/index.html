@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <script src="../mocha.js"></script>
+  <script src="../chai.js"></script>
+  <script src="require.js"></script>
+  <script src="../node_fs_shim.js"></script>
+  <script src="../parse_tests.js"></script>
+  <script>
+    require.config({
+      baseUrl: '../../../',
+      scriptType: 'text/javascript;version=1.8'
+    });
+
+    // Using the TDD interface with suite() and such, so
+    // ask mocha to create those globals.
+    mocha.ui('tdd');
+
+    // make assert global too, since mocha TDD functions are too
+    var assert = chai.assert;
+    define('assert', [], function () { return chai.assert; });
+    define('fs', [], function () { return fs; });
+  </script>
+  <link rel="stylesheet" href="../mocha.css" />
+</head>
+<body>
+<div id="mocha"></div>
+<script>
+if (window.location.protocol == "file:") {
+  alert("Apologies, tests don't work if you're not over http. Blame CORS.");
+  throw new Error();
+}
+
+loadTestData(function (tests) {
+  tests = tests.map(function (t) { return 'test/' + t.slice(0, -3); });
+  require(tests, function () {
+    mocha.run();
+  });
+});
+</script>
+</body>
+</html>

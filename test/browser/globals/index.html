@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="stylesheet" href="../mocha.css" />
+  <script src="../mocha.js"></script>
+  <script src="../chai.js"></script>
+  <script src="../node_fs_shim.js"></script>
+  <script src="../parse_tests.js"></script>
+  <script src="../../../dist/jsmime.js" type="text/javascript;version=1.8"></script>
+  <script>
+    mocha.setup('tdd');
+    var assert = chai.assert;
+    function define(fn) {
+      return fn(function (name) { return window[name]; });
+    }
+    loadTestData(function (tests) {
+      var latchCount = 0;
+      tests.forEach(function (t) {
+        var script = document.createElement("script");
+        script.src = '../../' + t;
+        script.type = 'text/javascript;version=1.8';
+        script.onerror = function (err) { console.log(err); };
+        script.onload = function () {
+          if (++latchCount == tests.length)
+            mocha.run();
+        };
+        document.head.appendChild(script);
+      });
+    });
+  </script>
+</head>
+<body>
+  <div id="mocha"></div>
+</body>
+</html>
+

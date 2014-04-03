@@ -1,0 +1,88 @@
+Related specifications and MIME extensions
+==========================================
+
+Properly generating or parsing email and news messages requires referring to a
+diverse set of specifications. All of the specifications used to develop jsmime
+and to which frequent reference is made in the code are provided here as a list.
+Although many specifications have multiple versions, only the newest version of
+these specifications are linked to. As jsmime is still in development, some
+specifications are not yet consulted for implementation. These are marked with
+XXX markers.
+
+Basic format of bodies:
+
+* [RFC 2045](http://tools.ietf.org/html/rfc2045):
+  MIME Part 1, Format of Internet Message Bodies
+* [RFC 2046](http://tools.ietf.org/html/rfc2046):
+  MIME Part 2, Media Types
+
+Structured header interpretation:
+
+* [RFC 2047](http://tools.ietf.org/html/rfc2047):
+  MIME Part 3, Message Header Extensions for Non-ASCII Text
+* [RFC 2231](http://tools.ietf.org/html/rfc2231):
+  MIME Parameter Value and Encoded Word Extensions
+* [RFC 5322](http://tools.ietf.org/html/rfc5322):
+  Internet Message Format
+* [RFC 5536](http://tools.ietf.org/html/rfc5536):
+  Netnews Article Format
+* [RFC 6532](http://tools.ietf.org/html/rfc6532):
+  Internationalized Email Headers
+
+Body decoding:
+* XXX [Uuencode](http://pubs.opengroup.org/onlinepubs/7908799/xcu/uuencode.html)
+* XXX [yEnc](http://www.yenc.org/yenc-draft.1.3.txt)
+* XXX [TNEF](http://msdn.microsoft.com/en-us/library/cc425498%28v=exchg.80%29.aspx)
+* XXX [RFC 3156](http://tools.ietf.org/html/rfc3156)
+  MIME Security with PGP
+* XXX [RFC 4880](http://tools.ietf.org/html/rfc4880)
+  OpenPGP Message Format
+* XXX [RFC 5751](http://tools.ietf.org/html/rfc5751)
+  S/MIME Version 3.2 Message Format Specification
+
+Other:
+* XXX [RFC 2387](http://tools.ietf.org/html/rfc2387)
+  The MIME Multipart/Related Content-type
+* XXX [RFC 2392](http://tools.ietf.org/html/rfc2392)
+  Content-ID and Message-ID Uniform Resource Locators
+* XXX [RFC 2557](http://tools.ietf.org/html/rfc2557)
+  MIME Encapsulation of Aggregate Documents, such as HTML (MHTML)
+* [RFC 3501](http://tools.ietf.org/html/rfc3501)
+  IMAP Version 4rev1 (specifically the part numbering section)
+* XXX [RFC 3676](http://tools.ietf.org/html/rfc3676)
+  The Text/Plain Format and DelSp Parameters
+* XXX [RFC 3798](http://tools.ietf.org/html/rfc3978)
+  Message Disposition Notification
+
+
+Willful violations
+------------------
+
+An unfortunate consequence of historical developments for email is that the set
+of specifications for handling email is often an insufficient guide to actually
+working with email in practice. For further aid to prospective implementers, the
+following list is a list of all deliberate deviations from specification
+requirements.
+
+* All three line conventions are treated as a CRLF (`\r`, `\n`, `\r\n`). In this
+  parser, it is possible to use a mixture of line endings in the same file,
+  although this is highly unlikely to come up in practice.
+* MIME and message headers need not be either ASCII or UTF-8, as use of other
+  character sets without proper wrapping is very common in practice. For more
+  precise rules on how non-ASCII headers are interpreted, read the comments in
+  the source code.
+* CFWS is permitted in fewer places than the specifications require. This was
+  done to match other parsers (including the one this replaced, among others).
+  In particular, the Content-Type parameter needs to be a single run of text, so
+  `multipart / mixed` would be treated as an invalid type.
+* If the first line of a headers block starts with the Berkeley mailbox
+  delimiter (`From` followed by a space character), it is ignored.
+* A `message/rfc822`-like part may be encoded in quoted-printable or base64,
+  while RFC 6532 only permits this for `message/global`.
+* Decoding the `%hh` specifiers (per RFC 2231) happens for any parameter whose
+  name ends with a `'*'`, regardless of whether or not it is enclosed in a
+  string or not.
+* RFC 2047 encoded-words may contain embedded spaces.
+* RFC 2047 decoding tolerates multibyte characters being split between adjacent
+  encoded-words.
+* A quoted string whose contents is a full RFC 2047 encoded-word is decoded.

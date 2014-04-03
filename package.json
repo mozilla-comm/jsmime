@@ -1,0 +1,21 @@
+{
+  "name": "jsmime",
+  "version": "0.2.0",
+  "description": "An asynchronous MIME parser and emitter written in JavaScript",
+  "main": "jsmime.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mozilla-comm/jsmime.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mozilla-comm/jsmime/issues"
+  }
+}

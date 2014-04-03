@@ -1,0 +1,31 @@
+Developing
+==========
+
+JSMime is intended to rely only on HTML 5 Web APIs and ES 6 as external
+requirements for its development. However, these are still a work in progress,
+and thus support for them may vary from browser to browser or among different
+rendering engines. Polyfilling may be necessary to get this to work, but
+polyfills should only be present in test framework code (such as
+`head_xpcshell_glue.js`) and not in the main source or test files themselves.
+
+
+Tests
+=====
+
+All changes and new code require tests before being accepted. Tests are written
+using Mocha's TDD interface, and may be found in the `test` directory. Utility
+data files (such as emails to parse) are found in the `test/data` directory.
+These data files are loaded with an appropriate polyfill of a subset of NodeJS's
+`fs` module. The complete list of tests is enumerated in `test/xpcshell.ini`;
+other test suites parse this file to determine where all of the tests are
+located.
+
+At present, there are three different ways the test suite can be run:
+1. Loading `test/browser/amd/index.html` in a browser.
+2. Loading `test/browser/globals/index.html` in a browser.
+3. Using `test/xpcshell.ini` and Mozilla's xpcshell-tests framework, after
+importing a version of the code into the comm-central tree.
+
+Due to browser security rules and the use of XMLHttpRequest to polyfill `fs`,
+the browser tests need to be served by a local HTTP server instead of being run
+from a `file:` URL.
