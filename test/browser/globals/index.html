@@ -11,21 +11,32 @@
   <script>
     mocha.setup('tdd');
     var assert = chai.assert;
+    var lastdef = undefined;
     function define(fn) {
-      return fn(function (name) { return window[name]; });
+      return lastdef = fn(function (name) { return window[name]; });
     }
-    loadTestData(function (tests) {
-      var latchCount = 0;
-      tests.forEach(function (t) {
+    function asyncLoadFile(file) {
+      return new Promise(function (resolve, reject) {
         var script = document.createElement("script");
-        script.src = '../../' + t;
-        script.type = 'text/javascript;version=1.8';
-        script.onerror = function (err) { console.log(err); };
-        script.onload = function () {
-          if (++latchCount == tests.length)
-            mocha.run();
-        };
+        script.src = "../../" + file;
+        script.type = "text/javascript;version=1.8";
+        script.onerror = reject;
+        script.onload = function () { resolve(lastdef); lastdef = undefined; };
         document.head.appendChild(script);
+      });
+    }
+    function preloadModule(name) {
+      return asyncLoadFile(name + ".js").then(function (res) {
+        window['test/' + name] = res;
+      });
+    }
+    Promise.all([
+      "mock_date",
+    ].map(preloadModule)).then(function () {
+      loadTestData(function (tests) {
+        Promise.all(tests.map(asyncLoadFile)).then(function () {
+          mocha.run();
+        });
       });
     });
   </script>

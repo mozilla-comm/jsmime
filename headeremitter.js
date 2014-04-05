@@ -12,7 +12,7 @@ define(function(require) {
 var mimeutils = require('./mimeutils');
 
 // Get the default structured encoders and add them to the map
-var structuredHeaders = require('structuredHeaders');
+var structuredHeaders = require('./structuredHeaders');
 var encoders = new Map();
 var preferredSpellings = structuredHeaders.spellings;
 for (let [header, encoder] of structuredHeaders.encoders) {
