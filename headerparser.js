@@ -939,7 +939,11 @@ for (let pair of structuredHeaders.decoders) {
  * - To
  *
  * Date headers (results are the same as parseDateHeader):
- * - (TODO: Parsing support for these headers is currently unsupported)
+ * - Date
+ * - Expires
+ * - Injection-Date
+ * - NNTP-Posting-Date
+ * - Resent-Date
  *
  * References headers (results are the same as parseReferencesHeader):
  * - (TODO: Parsing support for these headers is currently unsupported)

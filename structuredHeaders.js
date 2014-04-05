@@ -100,10 +100,21 @@ function writeUnstructured(value) {
 addHeader("Comments", parseUnstructured, writeUnstructured);
 addHeader("Keywords", parseUnstructured, writeUnstructured);
 addHeader("Subject", parseUnstructured, writeUnstructured);
-
 // RFC 2045
 addHeader("Content-Description", parseUnstructured, writeUnstructured);
 
+
+// Date headers
+function parseDate(values) { return this.parseDateHeader(values[0]); }
+function writeDate(value) { this.addDate(value); }
+
+// RFC 5322
+addHeader("Date", parseDate, writeDate);
+addHeader("Resent-Date", parseDate, writeDate);
+// RFC 5536
+addHeader("Expires", parseDate, writeDate);
+addHeader("Injection-Date", parseDate, writeDate);
+addHeader("NNTP-Posting-Date", parseDate, writeDate);
 
 
 // Miscellaneous headers (those that don't fall under the above schemes):
