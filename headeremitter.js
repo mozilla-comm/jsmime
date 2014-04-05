@@ -593,6 +593,65 @@ HeaderEmitter.prototype.addUnstructured = function (text) {
   this.addPhrase(text, "", false);
 };
 
+/** RFC 822 labels for days of the week. */
+const kDaysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/**
+ * Formatting helper to output numbers between 0-9 as 00-09 instead.
+ */
+function padTo2Digits(num) {
+  return num < 10 ? "0" + num : num.toString();
+}
+
+/**
+ * Add a date/time field to the output, using the JS date object as the time
+ * representation. The value will be output using the timezone offset of the
+ * date object, which is usually the timezone of the user (modulo timezone and
+ * DST changes).
+ *
+ * Note that if the date is an invalid date (its internal date parameter is a
+ * NaN value), this method throws an error instead of generating an invalid
+ * string.
+ *
+ * @public
+ * @param {Date} date The date to be added to the output string.
+ */
+HeaderEmitter.prototype.addDate = function (date) {
+  // Rather than make a header plastered with NaN values, throw an error on
+  // specific invalid dates.
+  if (isNaN(date.getTime()))
+    throw new Error("Cannot encode an invalid date");
+
+  // RFC 5322 says years can't be before 1900. The after 9999 is a bit that
+  // derives from the specification saying that years have 4 digits.
+  if (date.getFullYear() < 1900 || date.getFullYear() > 9999)
+    throw new Error("Date year is out of encodable range");
+
+  // Start by computing the timezone offset for a day. We lack a good format, so
+  // the the 0-padding is done by hand. Note that the tzoffset we output is in
+  // the form ±hhmm, so we need to separate the offset (in minutes) into an hour
+  // and minute pair.
+  let tzOffset = date.getTimezoneOffset();
+  let tzOffHours = Math.abs(Math.trunc(tzOffset / 60));
+  let tzOffMinutes = Math.abs(tzOffset) % 60;
+  let tzOffsetStr = (tzOffset < 0 ? "-" : "+") +
+    padTo2Digits(tzOffHours) + padTo2Digits(tzOffMinutes);
+
+  // Convert the day-time figure into a single value to avoid unwanted line
+  // breaks in the middle.
+  let dayTime = [
+    kDaysOfWeek[date.getDay()] + ",",
+    date.getDate(),
+    mimeutils.kMonthNames[date.getMonth()],
+    date.getFullYear(),
+    padTo2Digits(date.getHours()) + ":" +
+      padTo2Digits(date.getMinutes()) + ":" +
+      padTo2Digits(date.getSeconds()),
+    tzOffsetStr
+  ].join(" ");
+  this.addText(dayTime, false);
+};
+
 /**
  * Signal that the current header has been finished encoding.
  *

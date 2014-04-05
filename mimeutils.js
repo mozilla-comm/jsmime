@@ -79,9 +79,14 @@ function typedArrayToString(buffer) {
   return string;
 }
 
+/** A list of month names for Date parsing. */
+const kMonthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+  "Sep", "Oct", "Nov", "Dec"];
+
 return {
   decode_base64: decode_base64,
   decode_qp: decode_qp,
+  kMonthNames: kMonthNames,
   stringToTypedArray: stringToTypedArray,
   typedArrayToString: typedArrayToString,
 };

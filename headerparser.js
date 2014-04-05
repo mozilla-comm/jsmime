@@ -787,6 +787,109 @@ function decode2231Value(value) {
     .decode(typedarray, {stream: false});
 }
 
+// This is a map of known timezone abbreviations, for fallback in obsolete Date
+// productions.
+const kKnownTZs = {
+  // The following timezones are explicitly listed in RFC 5322.
+  "UT":  "+0000", "GMT": "+0000",
+  "EST": "-0500", "EDT": "-0400",
+  "CST": "-0600", "CDT": "-0500",
+  "MST": "-0700", "MDT": "-0600",
+  "PST": "-0800", "PDT": "-0700",
+  // The following are time zones copied from NSPR's prtime.c
+  "AST": "-0400", // Atlantic Standard Time
+  "NST": "-0330", // Newfoundland Standard Time
+  "BST": "+0100", // British Summer Time
+  "MET": "+0100", // Middle Europe Time
+  "EET": "+0200", // Eastern Europe Time
+  "JST": "+0900"  // Japan Standard Time
+};
+
+/**
+ * Parse a header that contains a date-time definition according to RFC 5322.
+ * The result is a JS date object with the same timestamp as the header.
+ *
+ * The dates returned by this parser cannot be reliably converted back into the
+ * original header for two reasons. First, JS date objects cannot retain the
+ * timezone information they were initialized with, so reserializing a date
+ * header would necessarily produce a date in either the current timezone or in
+ * UTC. Second, JS dates measure time as seconds elapsed from the POSIX epoch
+ * excluding leap seconds. Any timestamp containing a leap second is instead
+ * converted into one that represents the next second.
+ *
+ * Dates that do not match the RFC 5322 production are instead attempted to
+ * parse using the Date.parse function. The strings that are accepted by
+ * Date.parse are not fully defined by the standard, but most implementations
+ * should accept strings that look rather close to RFC 5322 strings. Truly
+ * invalid dates produce a formulation that results in an invalid date,
+ * detectable by having its .getTime() method return NaN.
+ *
+ * @param {String} header The MIME header value to parse.
+ * @returns {Date}        The date contained within the header, as described
+ *                        above.
+ */
+function parseDateHeader(header) {
+  let tokens = [for (x of getHeaderTokens(header, ",:", {})) x.toString()];
+  // What does a Date header look like? In practice, most date headers devolve
+  // into Date: [dow ,] dom mon year hh:mm:ss tzoff [(abbrev)], with the day of
+  // week mostly present and the timezone abbreviation mostly absent.
+
+  // First, ignore the day-of-the-week if present. This would be the first two
+  // tokens.
+  if (tokens[1] === ',')
+    tokens = tokens.slice(2);
+
+  // Save off the numeric tokens
+  let day = parseInt(tokens[0]);
+  // month is tokens[1]
+  let year = parseInt(tokens[2]);
+  let hours = parseInt(tokens[3]);
+  // tokens[4] === ':'
+  let minutes = parseInt(tokens[5]);
+  // tokens[6] === ':'
+  let seconds = parseInt(tokens[7]);
+
+  // Compute the month. Check only the first three digits for equality; this
+  // allows us to accept, e.g., "January" in lieu of "Jan."
+  let month = mimeutils.kMonthNames.indexOf(tokens[1].slice(0, 3));
+  // If the month name is not recognized, make the result illegal.
+  if (month < 0)
+    month = NaN;
+
+  // Compute the full year if it's only 2 digits. RFC 5322 states that the
+  // cutoff is 50 instead of 70.
+  if (year < 100) {
+    year += year < 50 ? 2000 : 1900;
+  }
+
+  // Compute the timezone offset. If it's not in the form ±hhmm, convert it to
+  // that form.
+  let tzoffset = tokens[8];
+  if (tzoffset in kKnownTZs)
+    tzoffset = kKnownTZs[tzoffset];
+  let decompose = /^([+-])(\d\d)(\d\d)$/.exec(tzoffset);
+  // Unknown? Make it +0000
+  if (decompose === null)
+    decompose = ['+0000', '+', '00', '00'];
+  let tzOffsetInMin = parseInt(decompose[2]) * 60 + parseInt(decompose[3]);
+  if (decompose[1] == '-')
+    tzOffsetInMin = -tzOffsetInMin;
+
+  // How do we make the date at this point? Well, the JS date's constructor
+  // builds the time in terms of the local timezone. To account for the offset
+  // properly, we need to build in UTC.
+  let finalDate = new Date(Date.UTC(year, month, day, hours, minutes, seconds)
+    - tzOffsetInMin * 60 * 1000);
+
+  // Suppose our header was mangled and we couldn't read it--some of the fields
+  // became undefined. In that case, the date would become invalid, and the
+  // indication that it is so is that the underlying number is a NaN. In that
+  // scenario, we could build attempt to use JS Date parsing as a last-ditch
+  // attempt. But it's not clear that such messages really exist in practice,
+  // and the valid formats for Date in ES6 are unspecified.
+  return finalDate;
+}
+
 ////////////////////////////////////////
 // Structured header decoding support //
 ////////////////////////////////////////
@@ -926,6 +1029,7 @@ headerparser.convert8BitHeader = convert8BitHeader;
 headerparser.decodeRFC2047Words = decodeRFC2047Words;
 headerparser.getHeaderTokens = getHeaderTokens;
 headerparser.parseAddressingHeader = parseAddressingHeader;
+headerparser.parseDateHeader = parseDateHeader;
 headerparser.parseParameterHeader = parseParameterHeader;
 headerparser.parseStructuredHeader = parseStructuredHeader;
 return Object.freeze(headerparser);
