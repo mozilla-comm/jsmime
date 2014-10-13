@@ -275,9 +275,14 @@ HeaderEmitter.prototype.addText = function (text, mayBreakAfter) {
  *                                breakpoint.
  */
 HeaderEmitter.prototype.addQuotable = function (text, qchars, mayBreakAfter) {
+  // No text -> no need to be quoted (prevents strict warning errors).
+  if (text.length == 0)
+    return;
+
   // Figure out if we need to quote the string. Don't quote a string which
   // already appears to be quoted.
   let needsQuote = false;
+
   if (!(text[0] == '"' && text[text.length - 1] == '"') && qchars != '') {
     for (let i = 0; i < text.length; i++) {
       if (qchars.contains(text[i])) {
@@ -591,6 +596,9 @@ HeaderEmitter.prototype.addAddresses = function (addresses) {
  * @param {String} text The text to add to the output.
  */
 HeaderEmitter.prototype.addUnstructured = function (text) {
+  if (text.length == 0)
+    return;
+
   // Unstructured text is basically a phrase that can't be quoted. So, if we
   // have nothing in qchars, nothing should be quoted.
   this.addPhrase(text, "", false);
