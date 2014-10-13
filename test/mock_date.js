@@ -33,7 +33,9 @@ function MockDate(iso8601String) {
 }
 MockDate.prototype = {
   getTimezoneOffset: function () {
-    return this._tzOffset;
+    // This property is reversed from how it's defined in ISO 8601, i.e.,
+    // UTC +0100 needs to return -60.
+    return -this._tzOffset;
   },
   getTime: function () {
     return this._realDate.getTime();

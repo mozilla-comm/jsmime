@@ -2,7 +2,8 @@
 define(function(require) {
 
 var assert = require('assert');
-var headeremitter = require('jsmime').headeremitter;
+var jsmime = require('jsmime');
+var headeremitter = jsmime.headeremitter;
 var MockDate = require('test/mock_date');
 
 function arrayTest(data, fn) {
@@ -287,6 +288,20 @@ suite('headeremitter', function () {
       emitter.addHeaderName("Overly-Long-Date");
       emitter.addDate(new MockDate("2000-01-01T00:00:00Z"));
       emitter.finish();
+    });
+
+    test('Correctness of date', function () {
+      let emitter = headeremitter.makeStreamingEmitter(handler, { });
+      handler.reset();
+      let now = new Date();
+      emitter.addDate(now);
+      emitter.finish();
+      // All engines can parse the date strings we produce
+      let reparsed = new Date(handler.output);
+
+      // Now and reparsed should be correct to second-level precision.
+      assert.equal(reparsed.getMilliseconds(), 0);
+      assert.equal(now.getTime() - now.getMilliseconds(), reparsed.getTime());
     });
   });
 

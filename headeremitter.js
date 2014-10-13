@@ -634,7 +634,7 @@ HeaderEmitter.prototype.addDate = function (date) {
   let tzOffset = date.getTimezoneOffset();
   let tzOffHours = Math.abs(Math.trunc(tzOffset / 60));
   let tzOffMinutes = Math.abs(tzOffset) % 60;
-  let tzOffsetStr = (tzOffset < 0 ? "-" : "+") +
+  let tzOffsetStr = (tzOffset > 0 ? "-" : "+") +
     padTo2Digits(tzOffHours) + padTo2Digits(tzOffMinutes);
 
   // Convert the day-time figure into a single value to avoid unwanted line
