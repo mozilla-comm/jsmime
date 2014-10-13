@@ -82,11 +82,16 @@ var headerparser = {};
  * @param {Boolean} [opts.comments] If true, recognize comments.
  * @param {Boolean} [opts.rfc2047]  If true, parse and decode RFC 2047
  *                                  encoded-words.
- * @returns {(Token|String)*} A sequence of Token objects (which have a
- *                            toString method returning their value) or String
- *                            objects (representing delimiters).
+ * @returns {(Token|String)[]} An array of Token objects (which have a toString
+ *                             method returning their value) or String objects
+ *                             (representing delimiters).
  */
-function* getHeaderTokens(value, delimiters, opts) {
+function getHeaderTokens(value, delimiters, opts) {
+  // The array of parsed tokens. This method used to be a generator, but it
+  // appears that generators are poorly optimized in current engines, so it was
+  // converted to not be one.
+  let tokenList = [];
+
   /// Represents a non-delimiter token
   function Token(token) {
     // Unescape all quoted pairs. Any trailing \ is deleted.
@@ -130,12 +135,12 @@ function* getHeaderTokens(value, delimiters, opts) {
         if (opts.rfc2047 && text.startsWith("=?") && text.endsWith("?="))
           text = decodeRFC2047Words(text);
 
-        yield new Token(text);
+        tokenList.push(new Token(text));
         endQuote = undefined;
         tokenStart = undefined;
       } else if (ch == endQuote && ch == ']') {
         // Domain literals include their delimiters.
-        yield new Token(value.slice(tokenStart, i + 1));
+        tokenList.push(new Token(value.slice(tokenStart, i + 1)));
         endQuote = undefined;
         tokenStart = undefined;
       }
@@ -154,7 +159,7 @@ function* getHeaderTokens(value, delimiters, opts) {
         // If we were in the middle of a prior token (i.e., something like
         // foobar=?UTF-8?Q?blah?=), yield the previous segment as a token.
         if (tokenStart !== undefined) {
-          yield new Token(value.slice(tokenStart, i));
+          tokenList.push(new Token(value.slice(tokenStart, i)));
           tokenStart = undefined;
         }
 
@@ -164,7 +169,7 @@ function* getHeaderTokens(value, delimiters, opts) {
           "UTF-8");
         // Don't make a new Token variable, since we do not want to unescape the
         // decoded string.
-        yield { toString: function() { return string; }};
+        tokenList.push({ toString: function() { return string; }});
 
         // Skip everything we decoded. The -1 is because we don't want to
         // include the starting character.
@@ -232,12 +237,12 @@ function* getHeaderTokens(value, delimiters, opts) {
     // If our analysis concluded that we closed an open token, and there is an
     // open token, then yield that token.
     if (tokenIsEnding && tokenStart !== undefined) {
-      yield new Token(value.slice(tokenStart, i));
+      tokenList.push(new Token(value.slice(tokenStart, i)));
       tokenStart = undefined;
     }
     // If we need to output a delimiter, do so.
     if (isSpecial)
-      yield ch;
+      tokenList.push(ch);
     // If our analysis concluded that we could open a token, and no token is
     // opened yet, then start the token.
     if (tokenIsStarting && tokenStart === undefined) {
@@ -251,10 +256,12 @@ function* getHeaderTokens(value, delimiters, opts) {
     // Error case: a partially-open quoted string is assumed to have a trailing
     // " character.
     if (endQuote == '"')
-      yield new Token(value.slice(tokenStart + 1));
+      tokenList.push(new Token(value.slice(tokenStart + 1)));
     else
-      yield new Token(value.slice(tokenStart));
+      tokenList.push(new Token(value.slice(tokenStart)));
   }
+
+  return tokenList;
 }
 
 /**
