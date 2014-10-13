@@ -519,6 +519,13 @@ HeaderEmitter.prototype.addAddress = function (addr) {
     // This is a simple estimate that keeps names on one line if possible.
     this._reserveTokenSpace(addr.name.length + addr.email.length + 3);
     this.addPhrase(addr.name, ",()<>:;.\"", true);
+
+    // If we don't have an email address, don't write out the angle brackets for
+    // the address. It's already an abnormal situation should this appear, and
+    // this has better round-tripping properties.
+    if (!addr.email)
+      return;
+
     this.addText("<", false);
   }
 
@@ -556,10 +563,6 @@ HeaderEmitter.prototype.addAddress = function (addr) {
 HeaderEmitter.prototype.addAddresses = function (addresses) {
   let needsComma = false;
   for (let addr of addresses) {
-    // Ignore a dummy empty address.
-    if ("email" in addr && addr.email === "")
-      continue;
-
     // Add a comma if this is not the first element.
     if (needsComma)
       this.addText(", ", true);

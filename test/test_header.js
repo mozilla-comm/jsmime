@@ -328,6 +328,7 @@ suite('headerparser', function () {
       ["Name <not an email>", [{name: "Name", email: "not an email"}]],
       ["=?UTF-8?Q?Simple?= <a@b.c>",
         [{name: "=?UTF-8?Q?Simple?=", email: "a@b.c"}]],
+      ["No email address", [{name: "No email address", email: ""}]],
     ];
     header_tests.forEach(function (data) {
       arrayTest(data, function () {
