@@ -843,8 +843,12 @@ function parseDateHeader(header) {
 
   // First, ignore the day-of-the-week if present. This would be the first two
   // tokens.
-  if (tokens[1] === ',')
+  if (tokens.length > 1 && tokens[1] === ',')
     tokens = tokens.slice(2);
+
+  // If there are too few tokens, the date is obviously invalid.
+  if (tokens.length < 8)
+    return new Date(NaN);
 
   // Save off the numeric tokens
   let day = parseInt(tokens[0]);
