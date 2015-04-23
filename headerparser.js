@@ -939,10 +939,13 @@ for (let pair of structuredHeaders.decoders) {
  * - Delivered-To
  * - Disposition-Notification-To
  * - From
+ * - Mail-Reply-To
+ * - Mail-Followup-To
  * - Reply-To
  * - Resent-Bcc
  * - Resent-Cc
  * - Resent-From
+ * - Resent-Reply-To
  * - Resent-Sender
  * - Resent-To
  * - Return-Receipt-To

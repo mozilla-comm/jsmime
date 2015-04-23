@@ -500,7 +500,11 @@ HeaderEmitter.prototype.addStructuredHeader = function (name, value) {
     this.addHeaderName(preferredSpellings.get(lowerName));
     encoders.get(lowerName).call(this, value);
   } else if (typeof value === "string") {
-    // Assume it's an unstructured header
+    // Assume it's an unstructured header.
+    // All-lower-case-names are ugly, so capitalize first letters.
+    name = name.replace(/(^|-)[a-z]/g, function(match) {
+      return match.toUpperCase();
+    });
     this.addHeaderName(name);
     this.addUnstructured(value);
   } else {
