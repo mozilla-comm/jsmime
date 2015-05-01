@@ -202,10 +202,10 @@ function getHeaderTokens(value, delimiters, opts) {
     // the location.
     // isSpecial: The current character is a delimiter that needs to be output.
     let tokenIsEnding = false, tokenIsStarting = false, isSpecial = false;
-    if (wsp.contains(ch)) {
+    if (wsp.includes(ch)) {
       // Whitespace ends current tokens, doesn't emit anything.
       tokenIsEnding = true;
-    } else if (commentDepth == 0 && delimiters.contains(ch)) {
+    } else if (commentDepth == 0 && delimiters.includes(ch)) {
       // Delimiters end the current token, and need to be output. They do not
       // apply within comments.
       tokenIsEnding = true;

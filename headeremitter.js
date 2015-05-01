@@ -285,7 +285,7 @@ HeaderEmitter.prototype.addQuotable = function (text, qchars, mayBreakAfter) {
 
   if (!(text[0] == '"' && text[text.length - 1] == '"') && qchars != '') {
     for (let i = 0; i < text.length; i++) {
-      if (qchars.contains(text[i])) {
+      if (qchars.includes(text[i])) {
         needsQuote = true;
         break;
       }
@@ -330,7 +330,7 @@ HeaderEmitter.prototype.addPhrase = function (text, qchars, mayBreakAfter) {
       // If we don't have a breakpoint, and the text is encoded as a sequence of
       // atoms (and not a quoted-string), then make the last space we added a
       // breakpoint, regardless of the mayBreakAfter setting.
-      if (this._preferredBreakpoint == 0 && text.contains(" ")) {
+      if (this._preferredBreakpoint == 0 && text.includes(" ")) {
         if (this._currentLine[this._currentLine.length - 1] != '"')
           this._preferredBreakpoint = this._currentLine.lastIndexOf(" ");
       }
@@ -381,7 +381,7 @@ HeaderEmitter.prototype._addRFC2047Word = function (encodedText, useQP,
     var token = qpPrelude;
     for (let i = 0; i < encodedText.length; i++) {
       if (encodedText[i] < 0x20 || encodedText[i] >= 0x7F ||
-          qpForbidden.contains(binaryString[i])) {
+          qpForbidden.includes(binaryString[i])) {
         let ch = encodedText[i];
         token += "=" + hexString[(ch & 0xf0) >> 4] + hexString[ch & 0x0f];
       } else if (binaryString[i] == " ") {
@@ -427,7 +427,7 @@ HeaderEmitter.prototype.encodeRFC2047Phrase = function (text, mayBreakAfter) {
 
     // The length for quoted-printable is 3 chars only if encoded
     if (encodedText[i] < 0x20 || encodedText[i] >= 0x7f ||
-        qpForbidden.contains(String.fromCharCode(encodedText[i]))) {
+        qpForbidden.includes(String.fromCharCode(encodedText[i]))) {
       qpInc = 3;
     } else {
       qpInc = 1;
